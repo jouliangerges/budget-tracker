@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Core\Request;
-use App\Core\Response;
+use App\Core\Router;
 
 // Built-in-Server: echte Dateien (CSS, JS, Bilder) direkt ausliefern statt durch die App zu routen.
 if (PHP_SAPI === 'cli-server') {
@@ -15,11 +15,7 @@ if (PHP_SAPI === 'cli-server') {
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-$request = Request::fromGlobals();
+$router = new Router();
+(require dirname(__DIR__) . '/config/routes.php')($router);
 
-Response::json([
-    'method' => $request->getMethod(),
-    'path'   => $request->getPath(),
-    'page'   => $request->getQuery('page'),
-    'body'   => $request->getBody(),
-])->send();
+$router->dispatch(Request::fromGlobals())->send();

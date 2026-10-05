@@ -17,6 +17,7 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 - Lokaler Server: `php -S localhost:8000 -t public public/index.php`
 
 ## Code-Konventionen
+- Variablen und Properties in camelCase (`$className`), nicht snake_case.
 - Getter mit `get`-Präfix (`getMethod()`, `getStatus()`), wie in PSR-7.
 - Unveränderliche Objekte haben keine Setter; Änderungen über `with...()`, das einen Klon zurückgibt (`withHeader()`).
 
