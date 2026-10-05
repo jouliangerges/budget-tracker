@@ -1,0 +1,17 @@
+# Abhängigkeiten
+/vendor/
+/node_modules/
+
+# Datenbank (lokale Daten, nie committen)
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# Build-Output (wird aus resources/scss erzeugt)
+/public/assets/css/*.css
+/public/assets/css/*.css.map
+
+# System / Editor
+.DS_Store
+.idea/
+.vscode/
+.env

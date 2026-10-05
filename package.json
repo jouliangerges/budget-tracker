@@ -1,0 +1,11 @@
+{
+  "name": "budget-tracker",
+  "private": true,
+  "scripts": {
+    "scss:build": "sass resources/scss/main.scss public/assets/css/main.css --style=compressed",
+    "scss:watch": "sass --watch resources/scss/main.scss public/assets/css/main.css"
+  },
+  "devDependencies": {
+    "sass": "^1.80.0"
+  }
+}
