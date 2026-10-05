@@ -32,13 +32,13 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 ## Projektstand
 - [x] Milestone 1: Ordnerstruktur, `composer.json`, `package.json`, `.gitignore`, `git init` (noch kein Commit)
 - [x] `composer install` + `npm install`, erster Commit
-- [ ] Milestone 2: Front Controller + Router (Request-Lebenszyklus von `public/index.php` bis zum Controller)
+- [x] Milestone 2: Front Controller + Router (Request-Lebenszyklus von `public/index.php` bis zum Controller)
   - [x] 2.1 Front Controller `public/index.php`
   - [x] 2.2 `Core/Response` (immutable, `json()`, `noContent()`, `withHeader()`)
   - [x] 2.3 `Core/Request` (`fromGlobals()`, JSON-Body, wirft `JsonException`)
   - [x] 2.4 `Core/Router` (flache Routen-Liste, 404), `config/routes.php`, `HealthController`
-  - [ ] 2.5 Platzhalter `{id}` per Regex + 405 bei falscher Methode
-  - [ ] 2.6 Zentrale Fehlerbehandlung (JSON-Fehler, 400 bei `JsonException`, 500 ohne Stacktrace in Prod)
+  - [x] 2.5 Platzhalter `{id}` per Regex + 405 bei falscher Methode
+  - [x] 2.6 `Core/ErrorHandler` + try/catch in `index.php`, `set_error_handler` (Warnungen → `ErrorException`), `config/app.php` (`debug`)
 
 ## Arbeitsweise
 - User schreibt den Code selbst, Claude beschreibt die Aufgabe (Anforderungen, Fallstricke, curl-Tests) und macht danach ein Review. Boilerplate darf Claude direkt schreiben.
