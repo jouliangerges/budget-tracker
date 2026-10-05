@@ -17,6 +17,7 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 - Lokaler Server: `php -S localhost:8000 -t public public/index.php`
 
 ## Code-Konventionen
+- Code komplett auf Englisch: Bezeichner, Kommentare, Docblocks, Fehlermeldungen. (Erklärungen im Chat bleiben Deutsch.)
 - Variablen und Properties in camelCase (`$className`), nicht snake_case.
 - Getter mit `get`-Präfix (`getMethod()`, `getStatus()`), wie in PSR-7.
 - Unveränderliche Objekte haben keine Setter; Änderungen über `with...()`, das einen Klon zurückgibt (`withHeader()`).
@@ -32,3 +33,13 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 - [x] Milestone 1: Ordnerstruktur, `composer.json`, `package.json`, `.gitignore`, `git init` (noch kein Commit)
 - [x] `composer install` + `npm install`, erster Commit
 - [ ] Milestone 2: Front Controller + Router (Request-Lebenszyklus von `public/index.php` bis zum Controller)
+  - [x] 2.1 Front Controller `public/index.php`
+  - [x] 2.2 `Core/Response` (immutable, `json()`, `noContent()`, `withHeader()`)
+  - [x] 2.3 `Core/Request` (`fromGlobals()`, JSON-Body, wirft `JsonException`)
+  - [x] 2.4 `Core/Router` (flache Routen-Liste, 404), `config/routes.php`, `HealthController`
+  - [ ] 2.5 Platzhalter `{id}` per Regex + 405 bei falscher Methode
+  - [ ] 2.6 Zentrale Fehlerbehandlung (JSON-Fehler, 400 bei `JsonException`, 500 ohne Stacktrace in Prod)
+
+## Arbeitsweise
+- User schreibt den Code selbst, Claude beschreibt die Aufgabe (Anforderungen, Fallstricke, curl-Tests) und macht danach ein Review. Boilerplate darf Claude direkt schreiben.
+- Wenn Claude Code des Users anpasst: nur das ändern, was für die Aufgabe nötig ist. Keine Umbenennungen, Umformatierungen oder Umstrukturierungen nebenbei; Stilvorschläge stattdessen im Review nennen.

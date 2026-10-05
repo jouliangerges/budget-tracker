@@ -21,7 +21,7 @@ final class Request
     }
 
     /**
-     * @throws JsonException wenn der Body kein gültiges JSON-Objekt ist
+     * @throws JsonException if the body is not a valid JSON object
      */
     public static function fromGlobals(): self
     {

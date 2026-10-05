@@ -7,7 +7,7 @@ namespace App\Core;
 
 final class Router
 {
-    /** @var list<array{method: string, path: string, handler: array{class-string, string}}> */
+    /** @var list<array{method: string, path: string, handler: array{class-string, string}, pattern: string}> */
     private array $routes = [];
 
 
@@ -33,19 +33,31 @@ final class Router
 
     public function dispatch(Request $request): Response
     {
+        $allowedMethods = [];
 
         foreach ($this->routes as $route) {
-            if (
-                $route['method'] === $request->getMethod()
-                && $route['path'] === $request->getPath()
-            ) {
+            if (preg_match($route['pattern'], $request->getPath(), $matches)) {
+
+                if ($route['method'] !== $request->getMethod()) {
+                    $allowedMethods[] = $route['method'];
+                    continue;
+                }
+
+                // Keep only named groups: ['id' => '5'] instead of [0 => '/api/...', 'id' => '5', 1 => '5']
+                $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+
                 $handler = $route['handler'];
                 $className = $handler[0];
                 $method = $handler[1];
 
                 $controller = new $className();
-                return $controller->$method($request);
+                return $controller->$method($request, ...$params);
             }
+        }
+
+        if ($allowedMethods !== []) {
+            return Response::json(['error' => 'Method Not Allowed'], 405)
+                ->withHeader('Allow', implode(', ', array_unique($allowedMethods)));
         }
 
         return Response::json(['error' => 'Not Found'], 404);
@@ -53,10 +65,16 @@ final class Router
 
     private function addRoute(string $method, string $path, array $handler): void
     {
+        $path = rtrim($path, '/') ?: '/';
+
+        // '/api/transactions/{id}' → '#^/api/transactions/(?P<id>[^/]+)$#'
+        $pattern = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>[^/]+)', $path) . '$#';
+
         $this->routes[] = [
             'method' => strtoupper($method),
-            'path'   => rtrim($path, '/') ?: '/',
-            'handler' => $handler
+            'path'   => $path,
+            'handler' => $handler,
+            'pattern' => $pattern
         ];
     }
 }

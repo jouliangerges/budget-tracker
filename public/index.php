@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Core\Request;
 use App\Core\Router;
 
-// Built-in-Server: echte Dateien (CSS, JS, Bilder) direkt ausliefern statt durch die App zu routen.
+// Built-in server: serve real files (CSS, JS, images) directly instead of routing them through the app.
 if (PHP_SAPI === 'cli-server') {
     $file = __DIR__ . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     if (is_file($file)) {
