@@ -16,6 +16,10 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 - JS: native ES-Module direkt in `public/assets/js/`, kein Bundler.
 - Lokaler Server: `php -S localhost:8000 -t public public/index.php`
 
+## Code-Konventionen
+- Getter mit `get`-Präfix (`getMethod()`, `getStatus()`), wie in PSR-7.
+- Unveränderliche Objekte haben keine Setter; Änderungen über `with...()`, das einen Klon zurückgibt (`withHeader()`).
+
 ## Git-Konventionen
 - Commit-Messages immer auf Englisch, kurz: eine Zeile, Imperativ, max. ~50 Zeichen (z.B. `Add router and front controller`). Body nur, wenn wirklich nötig.
 
