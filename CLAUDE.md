@@ -18,6 +18,12 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 - Request-Lebenszyklus: `index.php` → `Request::fromGlobals()` → `Router::dispatch()` → Controller gibt `Response` zurück → `send()` nur einmal am Ende von `index.php`. Controller senden nie selbst.
 - Routen in `config/routes.php` (gibt `function (Router $router)` zurück). Platzhalter `{id}` werden als benannte Argumente übergeben: Controller-Parameter muss gleich heißen (`string $id`, immer string).
 - Fehlerbehandlung: `try/catch (Throwable)` in `index.php` → `ErrorHandler::toResponse()`. `JsonException` → 400, alles andere → 500 (wird geloggt). Debug-Infos nur bei `config/app.php` `debug => true`.
+- Datenbank: SQLite (bewusst statt MySQL: kein Server, Repo klonen und starten). Austauschbar halten: DSN aus `config/database.php`, Repositories nur Standard-SQL. Migrationen sind dialektspezifisch.
+- `Core/Database`: lazy PDO-Verbindung (`getConnection()` mit `??=`), `ERRMODE_EXCEPTION`, `FETCH_ASSOC`, `EMULATE_PREPARES false`; bei Treiber `sqlite` immer `PRAGMA foreign_keys = ON` (gilt pro Verbindung!).
+- Schema: `categories` (`id`, `name` UNIQUE NOCASE) und `transactions` (`category_id` FK RESTRICT, `type` income/expense, `amount` INTEGER in Cent > 0, `description` nullable, `date` TEXT `YYYY-MM-DD`, `created_at`). Alle Tabellen `STRICT`. `type` gehört an die Transaktion, nicht an die Kategorie (z.B. Erstattungen). In PHP später als Backed Enum `TransactionType`.
+- Migrationen: nummerierte `.sql`-Dateien in `database/migrations/`, kein `IF NOT EXISTS`. `php bin/migrate.php` führt neue Dateien je in einer Transaktion aus und merkt sie in Tabelle `migrations` (die legt das Script selbst an). Fehler → Rollback, STDERR, Exit-Code 1. Reset: `rm database/budget.sqlite`.
+- SQL-Regel: fester SQL-String ohne Werte → `query()`/`exec()` ok; sobald ein Wert ins SQL kommt → immer `prepare()` mit Platzhaltern.
+- Dependency Injection (geplant): kleiner `Core/Container` mit `set(id, factory)` / `get(id)` (Instanzen gemerkt), Definitionen explizit in `config/container.php`. Router ruft `$container->get($className)` statt `new`. Wie Slim + PHP-DI, aber ohne Autowiring (Reflection evtl. später als Lernschritt).
 
 ## Code-Konventionen
 - Code komplett auf Englisch: Bezeichner, Kommentare, Docblocks, Fehlermeldungen. (Erklärungen im Chat bleiben Deutsch.)
@@ -46,18 +52,21 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
   - [x] 2.4 `Core/Router` (flache Routen-Liste, 404), `config/routes.php`, `HealthController`
   - [x] 2.5 Platzhalter `{id}` per Regex + 405 bei falscher Methode
   - [x] 2.6 `Core/ErrorHandler` + try/catch in `index.php`, `set_error_handler` (Warnungen → `ErrorException`), `config/app.php` (`debug`)
-- [ ] Milestone 3: Datenbank — **hier geht es weiter**
+- [ ] Milestone 3: Datenbank
+  - [x] 3.1 Schema-Entwurf (siehe Architektur-Entscheidungen)
+  - [x] 3.2a Migration `001_create_categories_and_transactions.sql`
+  - [x] 3.2b `Core/Database` + `config/database.php`
+  - [x] 3.2c `bin/migrate.php`
+  - [ ] 3.3 `Models/Transaction` + `Repositories/TransactionRepository` (`findAll()`, `findById()`) — **hier geht es weiter**
+  - [ ] 3.4 `Core/Container` + `config/container.php`, Router auf `$container->get()` umbauen
+  - [ ] 3.5 `TransactionController::index()` / `show()` + Routen `GET /api/transactions`, `GET /api/transactions/{id}`; `HealthController` bleibt
+- [ ] Milestone 4: Schreiben (`POST`/`PUT`/`DELETE`) inkl. Validierung → 422; Migration `002` für `updated_at` (SQLite hat kein `ON UPDATE`: im Repository setzen oder Trigger)
 
 ## Nächste Sitzung: Einstieg
-1. `git status` prüfen: ist der Stand von 2.6 committet und gepusht?
-2. Milestone 3 mit dem User besprechen — **Vorschlag, noch nicht abgestimmt**:
-   - 3.1 Schema entwerfen: Tabelle `transactions` (z.B. `id`, `amount` als Integer in Cent statt Float, `type` income/expense, `category`, `description`, `date`, `created_at`). Erst besprechen, dann SQL.
-   - 3.2 Migration: SQL-Datei in `database/migrations/` + kleines CLI-Script, das sie ausführt; DB-Datei `database/budget.sqlite` (gitignored).
-   - 3.3 `Core/Database`: PDO-Verbindung zu SQLite (`ERRMODE_EXCEPTION`, `FETCH_ASSOC`), Pfad aus `config/`.
-   - 3.4 `Models/Transaction` + `Repositories/TransactionRepository` (`findAll()`, `findById()`), nur Prepared Statements.
-   - 3.5 `TransactionController::index()` / `show()` + Routen `GET /api/transactions`, `GET /api/transactions/{id}`; `HealthController` bleibt.
-   - Danach (Milestone 4): Schreiben (`POST`/`PUT`/`DELETE`) inkl. Validierung → 422.
-3. Offene Fragen an den User: Kategorien fest oder eigene Tabelle? Wie werden Controller an das Repository kommen (manuell im Router vs. kleiner Container)?
+1. `git status` prüfen: alles committet und gepusht?
+2. Offene Frage klären: Seed-Daten (Start-Kategorien, evtl. Beispiel-Buchungen) in `database/seeds/`, getrennt von Migrationen? Ohne Daten liefert `GET /api/transactions` nur `[]`.
+3. Dann 3.3 beschreiben: `Transaction`-Model (immutable, `TransactionType`-Enum, `amount` als int Cent) + Repository mit Prepared Statements.
+4. Optional: `"migrate": "php bin/migrate.php"` in `composer.json` (`composer migrate`).
 
 ## Arbeitsweise
 - User schreibt den Code selbst, Claude beschreibt die Aufgabe (Anforderungen, Fallstricke, curl-Tests) und macht danach ein Review. Boilerplate darf Claude direkt schreiben.
