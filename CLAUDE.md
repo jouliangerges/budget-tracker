@@ -57,16 +57,21 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
   - [x] 3.2a Migration `001_create_categories_and_transactions.sql`
   - [x] 3.2b `Core/Database` + `config/database.php`
   - [x] 3.2c `bin/migrate.php`
-  - [ ] 3.3 `Models/Transaction` + `Repositories/TransactionRepository` (`findAll()`, `findById()`) — **hier geht es weiter**
+  - [x] Seeds: `database/seeds/*.sql` + `bin/seed.php` (alle Dateien in einer Transaktion, kein Tracking; nicht idempotent). `composer migrate` / `composer seed`. Reset: `rm database/budget.sqlite && composer migrate && composer seed`
+  - [x] 3.3a `Models/TransactionType` (Backed Enum, Fälle `Income`/`Expense`) + `Models/Transaction` (`final readonly`, private Properties, `fromRow()` DB → Model, `toArray()` für JSON). API-Keys in camelCase, `type` als `->value`.
+  - [ ] 3.3b `Repositories/TransactionRepository` (`findAll()`, `findById()`) — **hier geht es weiter** (Aufgabe ist beschrieben)
   - [ ] 3.4 `Core/Container` + `config/container.php`, Router auf `$container->get()` umbauen
   - [ ] 3.5 `TransactionController::index()` / `show()` + Routen `GET /api/transactions`, `GET /api/transactions/{id}`; `HealthController` bleibt
 - [ ] Milestone 4: Schreiben (`POST`/`PUT`/`DELETE`) inkl. Validierung → 422; Migration `002` für `updated_at` (SQLite hat kein `ON UPDATE`: im Repository setzen oder Trigger)
 
 ## Nächste Sitzung: Einstieg
 1. `git status` prüfen: alles committet und gepusht?
-2. Offene Frage klären: Seed-Daten (Start-Kategorien, evtl. Beispiel-Buchungen) in `database/seeds/`, getrennt von Migrationen? Ohne Daten liefert `GET /api/transactions` nur `[]`.
-3. Dann 3.3 beschreiben: `Transaction`-Model (immutable, `TransactionType`-Enum, `amount` als int Cent) + Repository mit Prepared Statements.
-4. Optional: `"migrate": "php bin/migrate.php"` in `composer.json` (`composer migrate`).
+2. 3.3b weiter: User schreibt `TransactionRepository`. Kernpunkte der Aufgabe: `Database` (nicht `PDO`) im Konstruktor, `findAll()` mit `query()` und stabiler Sortierung (`date DESC, id DESC`), `findById()` mit `prepare()`, `fetch()` gibt `false` → `null` zurückgeben, explizite Spaltenliste statt `SELECT *`, Docblock `@return list<Transaction>`.
+3. Test per CLI: `findAll()` → 11 Einträge, erster = 2026-09-19; `findById(10)` → `income`; `findById(999)` → `null`.
+4. Danach Review, dann 3.4 (Container).
+
+## Lernnotizen
+- Casts wie `(int)` können Fehler verstecken (`(int) ['category_id']` ergab still `1`). Wo gecastet wird, im Review genau hinschauen.
 
 ## Arbeitsweise
 - User schreibt den Code selbst, Claude beschreibt die Aufgabe (Anforderungen, Fallstricke, curl-Tests) und macht danach ein Review. Boilerplate darf Claude direkt schreiben.
