@@ -66,6 +66,7 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
   - [x] T.1 PHPUnit 13 (PHP ≥ 8.4), `phpunit.xml` (Suites Unit/Integration, `requireCoverageMetadata` → jeder Test braucht `#[CoversClass]`, zufällige Reihenfolge), `tests/` spiegelt `src/` (`App\Tests\`), `composer test`
   - [ ] T.2 — **hier geht es weiter**. Unit Tests: `Container`, `Response`, `TransactionType`/`Transaction`, `ErrorHandler`
   - [ ] T.3 `Router`, `Request` (evtl. Umbau wegen `php://input`)
+    - Offener Bug: `ErrorHandler` macht aus jeder `JsonException` eine 400. Auch `Response::json()` wirft `JsonException` (z.B. kaputtes UTF-8 aus der DB) → Serverfehler wird als 400 gemeldet. Lösung: eigene Exception in `Request` für ungültige Bodies, `ErrorHandler` mappt nur die auf 400.
   - [ ] T.4 Integration: `Database` + `TransactionRepository` gegen `sqlite::memory:` mit Migration
   - [ ] T.5 GitHub Actions (PHP 8.5, Xdebug oder PCOV) + Coverage-Schwelle
 - [ ] Milestone 4: Schreiben (`POST`/`PUT`/`DELETE`) inkl. Validierung → 422; Migration `002` für `updated_at` (SQLite hat kein `ON UPDATE`: im Repository setzen oder Trigger)
@@ -80,4 +81,5 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 
 ## Arbeitsweise
 - User schreibt den Code selbst, Claude beschreibt die Aufgabe (Anforderungen, Fallstricke, curl-Tests) und macht danach ein Review. Boilerplate darf Claude direkt schreiben.
+- Tests schreibt Claude (Wunsch des Users), Produktivcode schreibt der User. Braucht ein Test eine Änderung am Produktivcode (z.B. Getter), beschreibt Claude sie und der User setzt sie um.
 - Wenn Claude Code des Users anpasst: nur das ändern, was für die Aufgabe nötig ist. Keine Umbenennungen, Umformatierungen oder Umstrukturierungen nebenbei; Stilvorschläge stattdessen im Review nennen.

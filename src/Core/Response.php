@@ -13,8 +13,7 @@ final class Response
         private string $body = '',
         private int $status = 200,
         private array $headers = [],
-    ) {
-    }
+    ) {}
 
     public static function json(mixed $data, int $status = 200): self
     {
@@ -42,6 +41,19 @@ final class Response
     public function getStatus(): int
     {
         return $this->status;
+    }
+
+    public function getBody(): string
+    {
+        return $this->body;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
     }
 
     public function send(): void
