@@ -17,21 +17,28 @@ final class Request
         private readonly string $path,
         private readonly array $query,
         private readonly array $body,
-    ) {
-    }
+    ) {}
 
     /**
      * @throws JsonException if the body is not a valid JSON object
      */
     public static function fromGlobals(): self
     {
-        $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+        return self::fromArrays($_SERVER, $_GET, (string) file_get_contents('php://input'));
+    }
 
-        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+    /**
+     * @param array<string, mixed> $server
+     * @param array<string, mixed> $query
+     * @throws JsonException if the body is not a valid JSON object
+     */
+    public static function fromArrays(array $server, array $query, string $rawBody): self
+    {
+        $method = strtoupper($server['REQUEST_METHOD'] ?? 'GET');
+
+        $path = parse_url($server['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
         $path = rtrim($path, '/') ?: '/';
-
-        $query = $_GET;
-        $body = self::parseJsonBody((string) file_get_contents('php://input'));
+        $body = self::parseJsonBody($rawBody);
 
         return new self($method, $path, $query, $body);
     }
