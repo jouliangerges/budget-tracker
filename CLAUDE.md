@@ -23,7 +23,7 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 - Schema: `categories` (`id`, `name` UNIQUE NOCASE) und `transactions` (`category_id` FK RESTRICT, `type` income/expense, `amount` INTEGER in Cent > 0, `description` nullable, `date` TEXT `YYYY-MM-DD`, `created_at`). Alle Tabellen `STRICT`. `type` gehört an die Transaktion, nicht an die Kategorie (z.B. Erstattungen). In PHP später als Backed Enum `TransactionType`.
 - Migrationen: nummerierte `.sql`-Dateien in `database/migrations/`, kein `IF NOT EXISTS`. `php bin/migrate.php` führt neue Dateien je in einer Transaktion aus und merkt sie in Tabelle `migrations` (die legt das Script selbst an). Fehler → Rollback, STDERR, Exit-Code 1. Reset: `rm database/budget.sqlite`.
 - SQL-Regel: fester SQL-String ohne Werte → `query()`/`exec()` ok; sobald ein Wert ins SQL kommt → immer `prepare()` mit Platzhaltern.
-- Dependency Injection (geplant): kleiner `Core/Container` mit `set(id, factory)` / `get(id)` (Instanzen gemerkt), Definitionen explizit in `config/container.php`. Router ruft `$container->get($className)` statt `new`. Wie Slim + PHP-DI, aber ohne Autowiring (Reflection evtl. später als Lernschritt).
+- Dependency Injection: kleiner `Core/Container` mit `set(id, factory)` / `get(id)` (Instanzen gemerkt), Definitionen explizit in `config/container.php`. Router ruft `$container->get($className)` statt `new`. Factories bekommen den Container als Argument; jede Klasse (auch ohne Abhängigkeiten) muss registriert sein. Nur Router und `config/container.php` rufen `get()` auf (kein Service Locator). Wie Slim + PHP-DI, aber ohne Autowiring (Reflection evtl. später als Lernschritt).
 
 ## Code-Konventionen
 - Code komplett auf Englisch: Bezeichner, Kommentare, Docblocks, Fehlermeldungen. (Erklärungen im Chat bleiben Deutsch.)
@@ -60,13 +60,19 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
   - [x] Seeds: `database/seeds/*.sql` + `bin/seed.php` (alle Dateien in einer Transaktion, kein Tracking; nicht idempotent). `composer migrate` / `composer seed`. Reset: `rm database/budget.sqlite && composer migrate && composer seed`
   - [x] 3.3a `Models/TransactionType` (Backed Enum, Fälle `Income`/`Expense`) + `Models/Transaction` (`final readonly`, private Properties, `fromRow()` DB → Model, `toArray()` für JSON). API-Keys in camelCase, `type` als `->value`.
   - [x] 3.3b `Repositories/TransactionRepository` (`findAll()`, `findById(int $id)`), per CLI getestet + Review
-  - [ ] 3.4 `Core/Container` + `config/container.php`, Router auf `$container->get()` umbauen — **hier geht es weiter**
+  - [x] 3.4 `Core/Container` + `config/container.php`, Router holt Controller per `$container->get()`
   - [ ] 3.5 `TransactionController::index()` / `show()` + Routen `GET /api/transactions`, `GET /api/transactions/{id}`; `HealthController` bleibt
+- [ ] Milestone T: Tests (nach 3.4, vor 3.5). Ziel 100 % Coverage für `src/` (`public/index.php`, `bin/` ausgenommen). Coverage lokal UND in CI (GitHub Actions + PCOV). Herd Lite hat keinen Coverage-Treiber → lokal vermutlich Docker/OrbStack.
+  - [ ] T.1 PHPUnit, `phpunit.xml`, `tests/` (`App\Tests\`), `composer test` — **hier geht es weiter**. Vorher klären: lokale Coverage per OrbStack/Docker oder MacPorts-PHP; Anzeige in VS Code per Coverage Gutters (Projekt im Container unter gleichem Pfad mounten)
+  - [ ] T.2 Unit Tests: `Container`, `Response`, `TransactionType`/`Transaction`, `ErrorHandler`
+  - [ ] T.3 `Router`, `Request` (evtl. Umbau wegen `php://input`)
+  - [ ] T.4 Integration: `Database` + `TransactionRepository` gegen `sqlite::memory:` mit Migration
+  - [ ] T.5 GitHub Actions mit PCOV + Coverage-Schwelle
 - [ ] Milestone 4: Schreiben (`POST`/`PUT`/`DELETE`) inkl. Validierung → 422; Migration `002` für `updated_at` (SQLite hat kein `ON UPDATE`: im Repository setzen oder Trigger)
 
 ## Nächste Sitzung: Einstieg
 1. `git status` prüfen: alles committet und gepusht?
-2. 3.4 Container: Claude beschreibt die Aufgabe, User schreibt den Code.
+2. Milestone T starten: zuerst Entscheidung lokale Coverage (OrbStack/Docker vs. zweites PHP), dann T.1.
 3. Merken für 3.5: Route liefert `string $id`, Repository will `int`. Nicht blind `(int)` casten (`'abc'` → `0`), vorher prüfen (`ctype_digit()` oder Routen-Regex `\d+`).
 
 ## Lernnotizen

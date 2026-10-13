@@ -10,6 +10,10 @@ final class Router
     /** @var list<array{method: string, path: string, handler: array{class-string, string}, pattern: string}> */
     private array $routes = [];
 
+    public function __construct(
+        private readonly Container $container
+    ) {}
+
 
     public function get(string $path, array $handler): void
     {
@@ -50,7 +54,8 @@ final class Router
                 $className = $handler[0];
                 $method = $handler[1];
 
-                $controller = new $className();
+                $controller = $this->container->get($className);
+
                 return $controller->$method($request, ...$params);
             }
         }

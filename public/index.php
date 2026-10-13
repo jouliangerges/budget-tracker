@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Core\Container;
 use App\Core\ErrorHandler;
 use App\Core\Request;
 use App\Core\Router;
@@ -24,7 +25,11 @@ set_error_handler(function (int $severity, string $message, string $file, int $l
 
 $config = require dirname(__DIR__) . '/config/app.php';
 $errorHandler = new ErrorHandler($config['debug']);
-$router = new Router();
+
+$container = new Container();
+(require dirname(__DIR__) . '/config/container.php')($container);
+
+$router = new Router($container);
 (require dirname(__DIR__) . '/config/routes.php')($router);
 
 try {
