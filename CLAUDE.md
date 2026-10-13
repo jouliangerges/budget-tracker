@@ -36,8 +36,8 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 
 ## Umgebung
 - Intel-Mac: Homebrew wird nicht mehr unterstützt.
-- PHP 8.5 + Composer über php.new (Herd Lite, `~/.config/herd-lite/bin`), Node 24 über den offiziellen .pkg-Installer.
-- PHP ist statisch gebaut: kein Xdebug möglich. Debugging über `error_log()` (erscheint im `php -S`-Terminal), Debug-JSON und curl.
+- PHP 8.5 über MacPorts (`/opt/local/bin/php`, `port select --set php php85`), Extensions als Ports (`php85-xdebug`, `php85-sqlite`, …). Eigene Einstellungen nur in `/opt/local/etc/php85/php.ini` (nicht in den generierten `.ini` unter `/opt/local/var/db/php85/`). Composer liegt in `/usr/local/bin/composer`. Node 24 über den offiziellen .pkg-Installer. Herd Lite (`~/.config/herd-lite`) ist nicht mehr im PATH, liegt nur noch als Fallback herum.
+- Xdebug ist geladen, aber `xdebug.mode=off` in der `php.ini`. Pro Befehl einschalten: `XDEBUG_MODE=coverage` (macht `composer test:coverage`) bzw. `XDEBUG_MODE=debug` fürs Step-Debugging. Hinweis: `ini_get('xdebug.mode')` zeigt `""`, weil der ini-Parser ungequotetes `off` zu `""` macht; prüfen mit `xdebug_info('mode')`.
 - VS Code mit Intelephense (Formatter, Find References). Projekt-Settings in `.vscode/settings.json` (nicht committet): Ruler bei 120, Inline-KI-Vorschläge aus.
 - zsh: in curl-Beispielen keine `#`-Kommentare hinter Befehlen; URLs mit `?` quoten.
 - GitHub: https://github.com/jouliangerges/budget-tracker (Commits mit GitHub-No-Reply-Adresse).
@@ -62,17 +62,17 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
   - [x] 3.3b `Repositories/TransactionRepository` (`findAll()`, `findById(int $id)`), per CLI getestet + Review
   - [x] 3.4 `Core/Container` + `config/container.php`, Router holt Controller per `$container->get()`
   - [ ] 3.5 `TransactionController::index()` / `show()` + Routen `GET /api/transactions`, `GET /api/transactions/{id}`; `HealthController` bleibt
-- [ ] Milestone T: Tests (nach 3.4, vor 3.5). Ziel 100 % Coverage für `src/` (`public/index.php`, `bin/` ausgenommen). Coverage lokal UND in CI (GitHub Actions + PCOV). Herd Lite hat keinen Coverage-Treiber → lokal vermutlich Docker/OrbStack.
-  - [ ] T.1 PHPUnit, `phpunit.xml`, `tests/` (`App\Tests\`), `composer test` — **hier geht es weiter**. Vorher klären: lokale Coverage per OrbStack/Docker oder MacPorts-PHP; Anzeige in VS Code per Coverage Gutters (Projekt im Container unter gleichem Pfad mounten)
-  - [ ] T.2 Unit Tests: `Container`, `Response`, `TransactionType`/`Transaction`, `ErrorHandler`
+- [ ] Milestone T: Tests (nach 3.4, vor 3.5). Ziel 100 % Coverage für `src/` (`public/index.php`, `bin/` ausgenommen). Coverage lokal (`composer test:coverage`: Text im Terminal, HTML in `coverage/html/`, `coverage/clover.xml` für die VS-Code-Extension Coverage Gutters) UND in CI (GitHub Actions).
+  - [x] T.1 PHPUnit 13 (PHP ≥ 8.4), `phpunit.xml` (Suites Unit/Integration, `requireCoverageMetadata` → jeder Test braucht `#[CoversClass]`, zufällige Reihenfolge), `tests/` spiegelt `src/` (`App\Tests\`), `composer test`
+  - [ ] T.2 — **hier geht es weiter**. Unit Tests: `Container`, `Response`, `TransactionType`/`Transaction`, `ErrorHandler`
   - [ ] T.3 `Router`, `Request` (evtl. Umbau wegen `php://input`)
   - [ ] T.4 Integration: `Database` + `TransactionRepository` gegen `sqlite::memory:` mit Migration
-  - [ ] T.5 GitHub Actions mit PCOV + Coverage-Schwelle
+  - [ ] T.5 GitHub Actions (PHP 8.5, Xdebug oder PCOV) + Coverage-Schwelle
 - [ ] Milestone 4: Schreiben (`POST`/`PUT`/`DELETE`) inkl. Validierung → 422; Migration `002` für `updated_at` (SQLite hat kein `ON UPDATE`: im Repository setzen oder Trigger)
 
 ## Nächste Sitzung: Einstieg
 1. `git status` prüfen: alles committet und gepusht?
-2. Milestone T starten: zuerst Entscheidung lokale Coverage (OrbStack/Docker vs. zweites PHP), dann T.1.
+2. T.2: `ContainerTest` (User schreibt, Claude beschreibt die Testfälle). Coverage vor dem Commit mit `composer test:coverage` prüfen.
 3. Merken für 3.5: Route liefert `string $id`, Repository will `int`. Nicht blind `(int)` casten (`'abc'` → `0`), vorher prüfen (`ctype_digit()` oder Routen-Regex `\d+`).
 
 ## Lernnotizen

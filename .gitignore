@@ -15,3 +15,7 @@
 .idea/
 .vscode/
 .env
+
+# Tests
+/.phpunit.cache/
+/coverage/

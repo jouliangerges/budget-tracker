@@ -3,16 +3,33 @@
     "description": "Smart Budget Tracker – Pure PHP REST-API mit SQLite",
     "type": "project",
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.4",
         "ext-pdo_sqlite": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
     },
     "autoload": {
         "psr-4": {
             "App\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Tests\\": "tests/"
+        }
+    },
     "scripts": {
         "migrate": "php bin/migrate.php",
-        "seed": "php bin/seed.php"
+        "seed": "php bin/seed.php",
+        "test": "phpunit",
+        "test:coverage": [
+            "@putenv XDEBUG_MODE=coverage",
+            "phpunit --coverage-text --coverage-html coverage/html --coverage-clover coverage/clover.xml"
+        ]
+    },
+    "scripts-descriptions": {
+        "test": "Run all tests (fast, without coverage)",
+        "test:coverage": "Run all tests with Xdebug coverage (text, HTML in coverage/html, Clover for VS Code)"
     }
 }
