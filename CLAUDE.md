@@ -59,16 +59,15 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
   - [x] 3.2c `bin/migrate.php`
   - [x] Seeds: `database/seeds/*.sql` + `bin/seed.php` (alle Dateien in einer Transaktion, kein Tracking; nicht idempotent). `composer migrate` / `composer seed`. Reset: `rm database/budget.sqlite && composer migrate && composer seed`
   - [x] 3.3a `Models/TransactionType` (Backed Enum, Fälle `Income`/`Expense`) + `Models/Transaction` (`final readonly`, private Properties, `fromRow()` DB → Model, `toArray()` für JSON). API-Keys in camelCase, `type` als `->value`.
-  - [ ] 3.3b `Repositories/TransactionRepository` (`findAll()`, `findById()`) — **hier geht es weiter** (Aufgabe ist beschrieben)
-  - [ ] 3.4 `Core/Container` + `config/container.php`, Router auf `$container->get()` umbauen
+  - [x] 3.3b `Repositories/TransactionRepository` (`findAll()`, `findById(int $id)`), per CLI getestet + Review
+  - [ ] 3.4 `Core/Container` + `config/container.php`, Router auf `$container->get()` umbauen — **hier geht es weiter**
   - [ ] 3.5 `TransactionController::index()` / `show()` + Routen `GET /api/transactions`, `GET /api/transactions/{id}`; `HealthController` bleibt
 - [ ] Milestone 4: Schreiben (`POST`/`PUT`/`DELETE`) inkl. Validierung → 422; Migration `002` für `updated_at` (SQLite hat kein `ON UPDATE`: im Repository setzen oder Trigger)
 
 ## Nächste Sitzung: Einstieg
 1. `git status` prüfen: alles committet und gepusht?
-2. 3.3b weiter: User schreibt `TransactionRepository`. Kernpunkte der Aufgabe: `Database` (nicht `PDO`) im Konstruktor, `findAll()` mit `query()` und stabiler Sortierung (`date DESC, id DESC`), `findById()` mit `prepare()`, `fetch()` gibt `false` → `null` zurückgeben, explizite Spaltenliste statt `SELECT *`, Docblock `@return list<Transaction>`.
-3. Test per CLI: `findAll()` → 11 Einträge, erster = 2026-09-19; `findById(10)` → `income`; `findById(999)` → `null`.
-4. Danach Review, dann 3.4 (Container).
+2. 3.4 Container: Claude beschreibt die Aufgabe, User schreibt den Code.
+3. Merken für 3.5: Route liefert `string $id`, Repository will `int`. Nicht blind `(int)` casten (`'abc'` → `0`), vorher prüfen (`ctype_digit()` oder Routen-Regex `\d+`).
 
 ## Lernnotizen
 - Casts wie `(int)` können Fehler verstecken (`(int) ['category_id']` ergab still `1`). Wo gecastet wird, im Review genau hinschauen.
