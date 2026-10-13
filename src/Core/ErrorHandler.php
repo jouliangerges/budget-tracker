@@ -6,11 +6,13 @@ namespace App\Core;
 
 use JsonException;
 use Throwable;
+use Psr\Log\LoggerInterface;
 
 final class ErrorHandler
 {
     public function __construct(
         private readonly bool $debug,
+        private readonly LoggerInterface $logger
     ) {}
 
     public function toResponse(Throwable $e): Response
@@ -25,7 +27,7 @@ final class ErrorHandler
         }
 
         if ($status === 500) {
-            error_log((string) $e);
+            $this->logger->error($e->getMessage(), ['exception' => $e]);
         }
         
         $body = ['error' => $message];

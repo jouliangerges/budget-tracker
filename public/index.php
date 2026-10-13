@@ -6,6 +6,7 @@ use App\Core\Container;
 use App\Core\ErrorHandler;
 use App\Core\Request;
 use App\Core\Router;
+use App\Core\StreamLogger;
 
 // Built-in server: serve real files (CSS, JS, images) directly instead of routing them through the app.
 if (PHP_SAPI === 'cli-server') {
@@ -24,7 +25,7 @@ set_error_handler(function (int $severity, string $message, string $file, int $l
 
 
 $config = require dirname(__DIR__) . '/config/app.php';
-$errorHandler = new ErrorHandler($config['debug']);
+$errorHandler = new ErrorHandler($config['debug'], new StreamLogger());
 
 $container = new Container();
 (require dirname(__DIR__) . '/config/container.php')($container);

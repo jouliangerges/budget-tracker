@@ -17,7 +17,7 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 - Lokaler Server: `php -S localhost:8000 -t public public/index.php`
 - Request-Lebenszyklus: `index.php` → `Request::fromGlobals()` → `Router::dispatch()` → Controller gibt `Response` zurück → `send()` nur einmal am Ende von `index.php`. Controller senden nie selbst.
 - Routen in `config/routes.php` (gibt `function (Router $router)` zurück). Platzhalter `{id}` werden als benannte Argumente übergeben: Controller-Parameter muss gleich heißen (`string $id`, immer string).
-- Fehlerbehandlung: `try/catch (Throwable)` in `index.php` → `ErrorHandler::toResponse()`. `JsonException` → 400, alles andere → 500 (wird geloggt). Debug-Infos nur bei `config/app.php` `debug => true`.
+- Fehlerbehandlung: `try/catch (Throwable)` in `index.php` → `ErrorHandler::toResponse()`. `JsonException` → 400, alles andere → 500 (wird geloggt). Debug-Infos nur bei `config/app.php` `debug => true`. Logging über PSR-3 (`psr/log`): `ErrorHandler` bekommt `LoggerInterface` injiziert, produktiv `Core/StreamLogger` (schreibt nach `php://stderr`, im Test in eine Temp-Datei). Exceptions im Context unter `exception`. `ErrorHandler` bleibt außerhalb des Containers.
 - Datenbank: SQLite (bewusst statt MySQL: kein Server, Repo klonen und starten). Austauschbar halten: DSN aus `config/database.php`, Repositories nur Standard-SQL. Migrationen sind dialektspezifisch.
 - `Core/Database`: lazy PDO-Verbindung (`getConnection()` mit `??=`), `ERRMODE_EXCEPTION`, `FETCH_ASSOC`, `EMULATE_PREPARES false`; bei Treiber `sqlite` immer `PRAGMA foreign_keys = ON` (gilt pro Verbindung!).
 - Schema: `categories` (`id`, `name` UNIQUE NOCASE) und `transactions` (`category_id` FK RESTRICT, `type` income/expense, `amount` INTEGER in Cent > 0, `description` nullable, `date` TEXT `YYYY-MM-DD`, `created_at`). Alle Tabellen `STRICT`. `type` gehört an die Transaktion, nicht an die Kategorie (z.B. Erstattungen). In PHP später als Backed Enum `TransactionType`.
@@ -64,8 +64,8 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
   - [ ] 3.5 `TransactionController::index()` / `show()` + Routen `GET /api/transactions`, `GET /api/transactions/{id}`; `HealthController` bleibt
 - [ ] Milestone T: Tests (nach 3.4, vor 3.5). Ziel 100 % Coverage für `src/` (`public/index.php`, `bin/` ausgenommen). Coverage lokal (`composer test:coverage`: Text im Terminal, HTML in `coverage/html/`, `coverage/clover.xml` für die VS-Code-Extension Coverage Gutters) UND in CI (GitHub Actions).
   - [x] T.1 PHPUnit 13 (PHP ≥ 8.4), `phpunit.xml` (Suites Unit/Integration, `requireCoverageMetadata` → jeder Test braucht `#[CoversClass]`, zufällige Reihenfolge), `tests/` spiegelt `src/` (`App\Tests\`), `composer test`
-  - [ ] T.2 — **hier geht es weiter**. Unit Tests: `Container`, `Response`, `TransactionType`/`Transaction`, `ErrorHandler`
-  - [ ] T.3 `Router`, `Request` (evtl. Umbau wegen `php://input`)
+  - [x] T.2 Unit Tests: `Container`, `Response` (+ `getBody()`/`getHeaders()`), `TransactionType`/`Transaction`, `StreamLogger`, `ErrorHandler` — alle 100 %
+  - [ ] T.3 — **hier geht es weiter**. `Router`, `Request` (evtl. Umbau wegen `php://input`)
     - Offener Bug: `ErrorHandler` macht aus jeder `JsonException` eine 400. Auch `Response::json()` wirft `JsonException` (z.B. kaputtes UTF-8 aus der DB) → Serverfehler wird als 400 gemeldet. Lösung: eigene Exception in `Request` für ungültige Bodies, `ErrorHandler` mappt nur die auf 400.
   - [ ] T.4 Integration: `Database` + `TransactionRepository` gegen `sqlite::memory:` mit Migration
   - [ ] T.5 GitHub Actions (PHP 8.5, Xdebug oder PCOV) + Coverage-Schwelle
@@ -73,7 +73,7 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 
 ## Nächste Sitzung: Einstieg
 1. `git status` prüfen: alles committet und gepusht?
-2. T.2: `ContainerTest` (User schreibt, Claude beschreibt die Testfälle). Coverage vor dem Commit mit `composer test:coverage` prüfen.
+2. T.3: `Router`- und `Request`-Tests (Claude schreibt Tests, beschreibt nötige Umbauten am Produktivcode). Coverage vor dem Commit mit `composer test:coverage` prüfen.
 3. Merken für 3.5: Route liefert `string $id`, Repository will `int`. Nicht blind `(int)` casten (`'abc'` → `0`), vorher prüfen (`ctype_digit()` oder Routen-Regex `\d+`).
 
 ## Lernnotizen
@@ -81,5 +81,5 @@ Tech-Stack: Pure PHP (Backend), Vanilla JavaScript, HTML, SCSS, SQLite.
 
 ## Arbeitsweise
 - User schreibt den Code selbst, Claude beschreibt die Aufgabe (Anforderungen, Fallstricke, curl-Tests) und macht danach ein Review. Boilerplate darf Claude direkt schreiben.
-- Tests schreibt Claude (Wunsch des Users), Produktivcode schreibt der User. Braucht ein Test eine Änderung am Produktivcode (z.B. Getter), beschreibt Claude sie und der User setzt sie um.
+- Tests schreibt Claude (Wunsch des Users). Test-Doubles liegen in `tests/Support/` (z.B. `SpyLogger`). Nutzt ein Test fremde Klassen, braucht er `#[UsesClass]` (sonst risky). Produktivcode schreibt der User. Braucht ein Test eine Änderung am Produktivcode (z.B. Getter), beschreibt Claude sie und der User setzt sie um.
 - Wenn Claude Code des Users anpasst: nur das ändern, was für die Aufgabe nötig ist. Keine Umbenennungen, Umformatierungen oder Umstrukturierungen nebenbei; Stilvorschläge stattdessen im Review nennen.
