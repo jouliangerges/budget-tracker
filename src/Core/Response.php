@@ -11,11 +11,11 @@ final class Response
      */
     public function __construct(
         private string $body = '',
-        private int $status = 200,
+        private HttpStatus $status = HttpStatus::Ok,
         private array $headers = [],
     ) {}
 
-    public static function json(mixed $data, int $status = 200): self
+    public static function json(mixed $data, HttpStatus $status = HttpStatus::Ok): self
     {
         $body = json_encode(
             $data,
@@ -27,7 +27,7 @@ final class Response
 
     public static function noContent(): self
     {
-        return new self('', 204);
+        return new self('', HttpStatus::NoContent);
     }
 
     public function withHeader(string $name, string $value): self
@@ -38,7 +38,7 @@ final class Response
         return $clone;
     }
 
-    public function getStatus(): int
+    public function getStatus(): HttpStatus
     {
         return $this->status;
     }
@@ -58,7 +58,7 @@ final class Response
 
     public function send(): void
     {
-        http_response_code($this->status);
+        http_response_code($this->status->value);
 
         foreach ($this->headers as $name => $value) {
             header("{$name}: {$value}");

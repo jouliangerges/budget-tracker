@@ -17,16 +17,16 @@ final class ErrorHandler
 
     public function toResponse(Throwable $e): Response
     {
-        $status = 500;
-        $message = "Internal Server Error";
+        $status = HttpStatus::InternalServerError;
+        $message = HttpStatus::InternalServerError->getReasonPhrase();
 
         if ($e instanceof JsonException) {
 
-            $status = 400;
+            $status = HttpStatus::BadRequest;
             $message = "Invalid JSON body";
         }
 
-        if ($status === 500) {
+        if ($status === HttpStatus::InternalServerError) {
             $this->logger->error($e->getMessage(), ['exception' => $e]);
         }
         

@@ -61,11 +61,13 @@ final class Router
         }
 
         if ($allowedMethods !== []) {
-            return Response::json(['error' => 'Method Not Allowed'], 405)
-                ->withHeader('Allow', implode(', ', array_unique($allowedMethods)));
+            return Response::json(
+                ['error' => HttpStatus::MethodNotAllowed->getReasonPhrase()],
+                HttpStatus::MethodNotAllowed
+            )->withHeader('Allow', implode(', ', array_unique($allowedMethods)));
         }
 
-        return Response::json(['error' => 'Not Found'], 404);
+        return Response::json(['error' => HttpStatus::NotFound->getReasonPhrase()], HttpStatus::NotFound);
     }
 
     private function addRoute(string $method, string $path, array $handler): void

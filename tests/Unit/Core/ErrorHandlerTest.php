@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Core;
 
 use App\Core\ErrorHandler;
+use App\Core\HttpStatus;
 use App\Core\Response;
 use App\Tests\Support\SpyLogger;
 use JsonException;
@@ -15,6 +16,7 @@ use RuntimeException;
 
 #[CoversClass(ErrorHandler::class)]
 #[UsesClass(Response::class)]
+#[UsesClass(HttpStatus::class)]
 final class ErrorHandlerTest extends TestCase
 {
     private SpyLogger $logger;
@@ -30,7 +32,7 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $handler->toResponse(new RuntimeException('Database is gone'));
 
-        self::assertSame(500, $response->getStatus());
+        self::assertSame(HttpStatus::InternalServerError, $response->getStatus());
         self::assertSame('{"error":"Internal Server Error"}', $response->getBody());
     }
 
@@ -53,7 +55,7 @@ final class ErrorHandlerTest extends TestCase
 
         $response = $handler->toResponse(new JsonException('Syntax error'));
 
-        self::assertSame(400, $response->getStatus());
+        self::assertSame(HttpStatus::BadRequest, $response->getStatus());
         self::assertSame('{"error":"Invalid JSON body"}', $response->getBody());
         self::assertSame([], $this->logger->records, 'Client errors must not be logged');
     }

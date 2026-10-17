@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Core;
 
+use App\Core\HttpStatus;
 use App\Core\Response;
 use JsonException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Response::class)]
+#[UsesClass(HttpStatus::class)]
 final class ResponseTest extends TestCase
 {
     public function testConstructorDefaults(): void
@@ -18,7 +21,7 @@ final class ResponseTest extends TestCase
         $response = new Response();
 
         self::assertSame('', $response->getBody());
-        self::assertSame(200, $response->getStatus());
+        self::assertSame(HttpStatus::Ok, $response->getStatus());
         self::assertSame([], $response->getHeaders());
     }
 
@@ -27,15 +30,15 @@ final class ResponseTest extends TestCase
         $response = Response::json(['status' => 'ok']);
 
         self::assertSame('{"status":"ok"}', $response->getBody());
-        self::assertSame(200, $response->getStatus());
+        self::assertSame(HttpStatus::Ok, $response->getStatus());
         self::assertSame(['Content-Type' => 'application/json; charset=utf-8'], $response->getHeaders());
     }
 
     public function testJsonUsesGivenStatus(): void
     {
-        $response = Response::json(['id' => 1], 201);
+        $response = Response::json(['id' => 1], HttpStatus::Created);
 
-        self::assertSame(201, $response->getStatus());
+        self::assertSame(HttpStatus::Created, $response->getStatus());
     }
 
     public function testJsonDoesNotEscapeSlashesOrUnicode(): void
@@ -57,7 +60,7 @@ final class ResponseTest extends TestCase
     {
         $response = Response::noContent();
 
-        self::assertSame(204, $response->getStatus());
+        self::assertSame(HttpStatus::NoContent, $response->getStatus());
         self::assertSame('', $response->getBody());
         self::assertSame([], $response->getHeaders());
     }
@@ -88,12 +91,12 @@ final class ResponseTest extends TestCase
     #[RunInSeparateProcess]
     public function testSendOutputsBodyAndSetsStatus(): void
     {
-        $response = Response::json(['status' => 'created'], 201);
+        $response = Response::json(['status' => 'created'], HttpStatus::Created);
 
         $this->expectOutputString('{"status":"created"}');
 
         $response->send();
 
-        self::assertSame(201, http_response_code());
+        self::assertSame(HttpStatus::Created->value, http_response_code());
     }
 }
